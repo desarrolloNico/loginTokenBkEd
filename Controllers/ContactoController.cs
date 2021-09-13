@@ -25,7 +25,6 @@ namespace contactos.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<ActionResult<List<Contacto>>> Get()
         {
             return await _context.Contactos.ToListAsync();
