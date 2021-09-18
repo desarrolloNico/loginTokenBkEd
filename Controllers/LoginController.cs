@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System;
+using System.Security.Claims;
 
 namespace contactos.Controllers
 {
@@ -43,7 +44,8 @@ namespace contactos.Controllers
 
             if(login.username == "userTest")
             {
-                user = new Usuario {username = "userTest", password = "1234"};
+                //user = new Usuario {username = "userTest", password = "1234"};
+                user = new Usuario {username = login.username, password = login.password, email = login.email, fechaCreado = login.fechaCreado};
             }
 
             return user;
@@ -54,9 +56,16 @@ namespace contactos.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+            var claims = new [] {
+                new Claim(JwtRegisteredClaimNames.Sub, user.username),
+                new Claim(JwtRegisteredClaimNames.Sub, user.username),
+                new Claim("FechaCreado", user.fechaCreado.ToString("yyyy-MM-dd")),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
                 _config["Jwt:Issuer"],
-                null,
+                claims,
                 expires: DateTime.Now.AddHours(3),
                 signingCredentials: credentials
                 );

@@ -8,6 +8,7 @@ using AutoMapper;
 using contactos.DTOs;
 
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace contactos.Controllers
 {
@@ -42,9 +43,24 @@ namespace contactos.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<Contacto>> Create([FromBody] ContactoDto contactoDto)
         {
             if(contactoDto == null) { return BadRequest(); }
+            
+            var currentUser = HttpContext.User;
+            int anio = 0;
+
+            if(currentUser.HasClaim(x => x.Type == "FechaCreado"))
+            {
+                DateTime fecha = DateTime.Parse(currentUser.Claims.FirstOrDefault(x => x.Type == "FechaCreado").Value);
+                anio = DateTime.Today.Year - fecha.Year;
+            }
+
+            if(anio < 2)
+            {
+                return Forbid();
+            }
 
             var entidad = _mapper.Map<Contacto>(contactoDto);
             _context.Contactos.Add(entidad);
