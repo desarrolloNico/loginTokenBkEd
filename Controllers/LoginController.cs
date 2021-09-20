@@ -8,6 +8,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System;
 using System.Security.Claims;
 
+using contactos.Service;
+
 namespace contactos.Controllers
 {
     [Route("api/[controller]")]
@@ -15,19 +17,22 @@ namespace contactos.Controllers
     public class LoginController: Controller
     {
         private readonly IConfiguration _config;
+        private readonly IUserService _userService;
 
-        public LoginController(IConfiguration config)
+        public LoginController(IConfiguration config, IUserService userService)
         {
             _config = config;
+            _userService = userService;
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] Usuario login)
+        public IActionResult Login([FromBody] UserDto login)
         {
             IActionResult response = Unauthorized();
 
-            var user = AuthenticateUser(login);
+            //var user = AuthenticateUser(login);
+            var user = _userService.Authenticate(login.username, login.password);
 
             if(user != null)
             {
@@ -38,20 +43,27 @@ namespace contactos.Controllers
             return response;
         }
 
-        private Usuario AuthenticateUser(Usuario login)
+        [AllowAnonymous]
+        [HttpPost("registro")]
+        public IActionResult Registro([FromBody] UserDto userDto)
         {
-            Usuario user = null;
+            User user = new User();
+            user.username = userDto.username;
+            user.email = userDto.email;
+            user.fechaCreado = userDto.fechaCreado;
 
-            if(login.username == "userTest")
+            try
             {
-                //user = new Usuario {username = "userTest", password = "1234"};
-                user = new Usuario {username = login.username, password = login.password, email = login.email, fechaCreado = login.fechaCreado};
+                _userService.Create(user, userDto.password);
+                return Ok();
             }
-
-            return user;
+            catch(Exception ex)
+            {
+                return BadRequest(new {message = ex.Message});
+            }
         }
 
-        private string GenerateJwt(Usuario user)
+        private string GenerateJwt(User user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
