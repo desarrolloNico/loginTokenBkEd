@@ -10,8 +10,8 @@ using contactos.Models;
 namespace contactos.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20210903121517_agregadoCamposUsuario")]
-    partial class agregadoCamposUsuario
+    [Migration("20210921035126_initialAzure")]
+    partial class initialAzure
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -42,20 +42,27 @@ namespace contactos.Migrations
                     b.ToTable("Contactos");
                 });
 
-            modelBuilder.Entity("contactos.Models.Usuario", b =>
+            modelBuilder.Entity("contactos.Models.User", b =>
                 {
                     b.Property<string>("username")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("password")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<byte[]>("PasswordHash")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("fechaCreado")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("username");
 
-                    b.ToTable("Usuarios");
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }
